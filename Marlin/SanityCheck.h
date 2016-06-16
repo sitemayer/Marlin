@@ -34,7 +34,7 @@
  * release we will stop supporting old IDE versions and will require user
  * action to proceed with compilation in such environments.
  */
-#if !defined(ARDUINO) || ARDUINO < 10600
+#if !defined(ARDUINO) || ARDUINO < 160
   #error Versions of Arduino IDE prior to 1.6.0 are no longer supported, please update your toolkit.
 #endif
 

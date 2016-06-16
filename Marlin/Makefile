@@ -37,15 +37,16 @@
 # from the commandline with "make HARDWARE_MOTHERBOARD=71" for example
 
 # This defined the board you are compiling for (see boards.h for the options)
-HARDWARE_MOTHERBOARD ?= 11
+# default for rumba board
+HARDWARE_MOTHERBOARD ?= 80
 
 # Arduino source install directory, and version number
 # On most linuxes this will be /usr/share/arduino
-ARDUINO_INSTALL_DIR  ?= /usr/share/arduino
-ARDUINO_VERSION      ?= 105
+ARDUINO_INSTALL_DIR  ?= /opt/arduino-1.6.9
+ARDUINO_VERSION      ?= 169
 
 # You can optionally set a path to the avr-gcc tools. Requires a trailing slash. (ex: /usr/local/avr-gcc/bin)
-AVR_TOOLS_PATH ?=
+AVR_TOOLS_PATH ?= /opt/arduino-1.6.9/hardware/tools/avr/bin/
 
 #Programmer configuration
 UPLOAD_RATE        ?= 115200
@@ -214,6 +215,10 @@ else ifeq  ($(HARDWARE_MOTHERBOARD),68)
 HARDWARE_VARIANT ?= arduino
 MCU              ?= atmega2560
 
+# Rumba
+else ifeq  ($(HARDWARE_MOTHERBOARD),80)
+MCU              ?= atmega2560
+
 endif
 
 # Be sure to regenerate speed_lookuptable.h with create_speed_lookuptable.py
@@ -228,13 +233,20 @@ F_CPU ?= 16000000
 ifeq ($(HARDWARE_VARIANT), arduino)
 HARDWARE_DIR = $(ARDUINO_INSTALL_DIR)/hardware
 else
-ifeq ($(shell [ $(ARDUINO_VERSION) -ge 100 ] && echo true), true)
+ifeq ($(shell [ $(ARDUINO_VERSION) -ge 160 ] && echo true), true)
+HARDWARE_DIR = ../ArduinoAddons/Arduino_1.6.x/hardware/marlin/avr
+else ifeq ($(shell [ $(ARDUINO_VERSION) -ge 100 ] && echo true), true)
 HARDWARE_DIR = ../ArduinoAddons/Arduino_1.x.x
 else
 HARDWARE_DIR = ../ArduinoAddons/Arduino_0.xx
 endif
 endif
+
+ifeq ($(shell [ $(ARDUINO_VERSION) -ge 160 ] && echo true), true)
+HARDWARE_SRC = $(HARDWARE_DIR)/$(HARDWARE_VARIANT)cores/arduino
+else
 HARDWARE_SRC = $(HARDWARE_DIR)/$(HARDWARE_VARIANT)/cores/arduino
+endif
 
 TARGET = $(notdir $(CURDIR))
 
@@ -245,7 +257,10 @@ TARGET = $(notdir $(CURDIR))
 VPATH = .
 VPATH += $(BUILD_DIR)
 VPATH += $(HARDWARE_SRC)
-ifeq ($(HARDWARE_VARIANT), $(filter $(HARDWARE_VARIANT),arduino Teensy))
+ifeq ($(shell [ $(ARDUINO_VERSION) -ge 160 ] && echo true), true)
+VPATH += $(HARDWARE_DIR)/libraries/LiquidCrystal/src
+VPATH += $(HARDWARE_DIR)/libraries/SPI
+else ifeq ($(HARDWARE_VARIANT), $(filter $(HARDWARE_VARIANT),arduino Teensy))
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/LiquidCrystal
 VPATH += $(ARDUINO_INSTALL_DIR)/libraries/SPI
 ifeq ($(LIQUID_TWI2), 1)
@@ -290,7 +305,7 @@ CXXSRC = WMath.cpp WString.cpp Print.cpp Marlin_main.cpp	\
 	SdFile.cpp SdVolume.cpp planner.cpp stepper.cpp \
 	temperature.cpp cardreader.cpp configuration_store.cpp \
 	watchdog.cpp SPI.cpp servo.cpp Tone.cpp ultralcd.cpp digipot_mcp4451.cpp \
-	dac_mcp4728.cpp vector_3.cpp qr_solve.cpp buzzer.cpp
+	dac_mcp4728.cpp vector_3.cpp qr_solve.cpp buzzer.cpp stopwatch.cpp
 ifeq ($(LIQUID_TWI2), 0)
 CXXSRC += LiquidCrystal.cpp
 else
@@ -322,7 +337,7 @@ DEBUG = stabs
 
 OPT = s
 
-DEFINES ?=
+DEFINES ?= ARDUINO
 
 # Program settings
 CC = $(AVR_TOOLS_PATH)avr-gcc
