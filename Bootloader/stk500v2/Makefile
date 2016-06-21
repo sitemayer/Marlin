@@ -198,6 +198,9 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 # in bytes - not words) is defined above.
 #LDFLAGS += -Wl,--section-start=.text=$(BOOTLOADER_ADDRESS) -nostartfiles -nodefaultlibs
 #LDFLAGS += -Wl,--section-start=.text=$(BOOTLOADER_ADDRESS) -nostartfiles
+
+# !!!NOTE: the bootloader address described in atmel datasheet is word address not byte address
+# by the compiler needs byte address, so do not modify the BOOTLOADER_ADDRESS in this Makefile
 LDFLAGS += -Wl,--section-start=.text=$(BOOTLOADER_ADDRESS)
 
 #---------------- Programming Options (avrdude) ----------------
